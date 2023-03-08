@@ -4,7 +4,7 @@
 int main(int argc, char **argv)
 {
     if (argc != 2) {
-        printf("USAGE: %s city\n", argv[0]);
+        printf("USAGE: %s area_name\n", argv[0]);
         return 1;
     }
 
