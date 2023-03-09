@@ -1,17 +1,54 @@
 #include "weather.h"
 #include "curl/curl.h"
+#include "cjson/cJSON.h"
 #include <string.h>
 #include <stdlib.h>
 #include <stdio.h>
+#include <stdbool.h>
 
 typedef struct {
     char *data;
     size_t size;
 } response_t;
 
+const char *get_value_str(const cJSON *json, const char *name)
+{
+    cJSON *json_str = cJSON_GetObjectItemCaseSensitive(json, name);
+    bool is_valid = name && json && cJSON_IsString(json_str) && json_str->valuestring;
+    return (is_valid ? json_str->valuestring : "?");
+}
+
 void parse_response(const response_t *response)
 {
-    printf("%s", response->data);
+    cJSON* json_root = cJSON_Parse(response->data);
+    if (!json_root) {
+        const char *error = cJSON_GetErrorPtr();
+        fprintf(stderr, "Error: %s\n", (error ? error : "parse fail"));
+        return;
+    }   
+
+    cJSON *json_area = cJSON_GetObjectItem(json_root, "nearest_area");
+    cJSON *json_area_0 = cJSON_GetArrayItem(json_area, 0);
+    cJSON *json_area_name = cJSON_GetObjectItem(json_area_0, "areaName");
+    cJSON *json_area_name_0 = cJSON_GetArrayItem(json_area_name, 0);
+    printf("area name:\t%s\n", get_value_str(json_area_name_0, "value"));
+
+    cJSON *json_currcond = cJSON_GetObjectItem(json_root, "current_condition");
+    cJSON *json_currcond_0 = cJSON_GetArrayItem(json_currcond, 0); 
+
+    cJSON *json_desc = cJSON_GetObjectItem(json_currcond_0, "weatherDesc");
+    cJSON *json_desc_0 = cJSON_GetArrayItem(json_desc, 0); 
+
+    printf("weather desc:\t%s\n", get_value_str(json_desc_0, "value"));
+    printf("wind dir:\t%s\n", get_value_str(json_currcond_0, "winddir16Point"));
+    printf("wind speed:\t%s km/h\n", get_value_str(json_currcond_0, "windspeedKmph"));
+
+    cJSON *json_weather = cJSON_GetObjectItem(json_root, "weather");
+    cJSON *json_weather_0 = cJSON_GetArrayItem(json_weather, 0); 
+    printf("temp range:\t%s..%s C\n", get_value_str(json_weather_0, "mintempC"), 
+                                      get_value_str(json_weather_0, "maxtempC"));
+
+    cJSON_Delete(json_root);
 }
 
 size_t cb(void *data, size_t size, size_t nmemb, void *clientp)
@@ -43,6 +80,8 @@ CURLcode request(const char *url)
     CURL *curl = curl_easy_init();
     if (curl) {
         curl_easy_setopt(curl, CURLOPT_URL, url);
+        curl_easy_setopt(curl, CURLOPT_TIMEOUT, 10L);
+
         curl_easy_setopt(curl, CURLOPT_SSL_VERIFYPEER, 0L);
         curl_easy_setopt(curl, CURLOPT_SSL_VERIFYHOST, 0L);
     
