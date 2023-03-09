@@ -96,7 +96,6 @@ CURLcode request(const char *url)
             fprintf(stderr, "request error: %s\n", curl_easy_strerror(res));
         }
 
-
         free(response.data);
         curl_easy_cleanup(curl);
     }
