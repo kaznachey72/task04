@@ -89,11 +89,14 @@ CURLcode request(const char *url)
         curl_easy_setopt(curl, CURLOPT_WRITEDATA, &response);
 
         res = curl_easy_perform(curl);
-        if (res != CURLE_OK) {
+        if (res == CURLE_OK) {
+            parse_response(&response);
+        }
+        else {
             fprintf(stderr, "request error: %s\n", curl_easy_strerror(res));
-        } 
+        }
 
-        parse_response(&response);
+
         free(response.data);
         curl_easy_cleanup(curl);
     }
