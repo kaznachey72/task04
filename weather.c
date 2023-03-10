@@ -127,6 +127,8 @@ const char *make_url(const char *area_name)
 void show_weather(const char *area_name)
 {
     const char *url = make_url(area_name);
-    request(url);
-    free((void*)url);
+    if (url) {
+        request(url);
+        free((void*)url);
+    }
 }
