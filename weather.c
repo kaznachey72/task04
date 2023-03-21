@@ -106,22 +106,14 @@ CURLcode request(const char *url)
 
 const char *make_url(const char *area_name) 
 {
-    const char *str_url  = "https://wttr.in/";
-    const char *str_frmt = "?format=j1";
-    size_t len_url = strlen(str_url);
-    size_t len_frmt = strlen(str_frmt);
-    size_t len_area_name = strlen(area_name);
-
-    char *res = malloc(len_url + len_area_name + len_frmt + 1);
-    if (!res) {
+    size_t len = snprintf(NULL, 0, "https://wttr.in/%s?format=j1", area_name) + 1;
+    char *url = (char*)malloc(len);
+    if (!url) {
         fprintf(stderr, "make url failed: insufficient memory!\n");
         return NULL;
-    }
-    
-    memcpy(res, str_url, len_url);
-    memcpy(res + len_url, area_name, len_area_name);
-    memcpy(res + len_url + len_area_name, str_frmt, len_frmt + 1);
-    return res;
+    }  
+    snprintf(url, len, "https://wttr.in/%s?format=j1", area_name);
+    return url;
 }
 
 void show_weather(const char *area_name)
